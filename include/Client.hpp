@@ -14,6 +14,7 @@ public:
 
     // Łączy klienta z serwerem TCP.
     void connectToServer();
+    void sendMessage(const std::string& message);
 
 private:
     std::string address_;

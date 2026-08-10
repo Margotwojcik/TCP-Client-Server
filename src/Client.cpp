@@ -66,3 +66,15 @@ void Client::connectToServer() {
 
     std::cout << "Connected to server.\n";
 }
+
+void Client::sendMessage(const std::string& message) {
+    if (send(
+            clientSocket_,
+            message.c_str(),
+            static_cast<int>(message.size()),
+            0) == -1) {
+        throw std::runtime_error("Failed to send message");
+    }
+
+    std::cout << "Message sent: " << message << '\n';
+}
