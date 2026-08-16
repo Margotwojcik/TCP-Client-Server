@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -40,7 +41,6 @@ Server::~Server() {
 
 void Server::start() {
 #ifdef _WIN32
-    // Winsock musi zostać zainicjalizowany przed użyciem socketów.
     WSADATA wsaData;
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -48,7 +48,6 @@ void Server::start() {
     }
 #endif
 
-    // Tworzymy gniazdo TCP.
     serverSocket_ = socket(AF_INET, SOCK_STREAM, 0);
 
 #ifdef _WIN32
@@ -64,7 +63,6 @@ void Server::start() {
     address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_port = htons(port_);
 
-    // Przypisujemy socket do adresu i portu.
     if (bind(
             serverSocket_,
             reinterpret_cast<sockaddr*>(&address),
@@ -72,14 +70,43 @@ void Server::start() {
         throw std::runtime_error("Failed to bind socket");
     }
 
-    // Rozpoczynamy nasłuchiwanie na połączenia.
     if (listen(serverSocket_, 5) == -1) {
         throw std::runtime_error("Failed to listen on socket");
     }
 
     std::cout << "Server listening on port "
               << port_ << '\n';
+}
 
+void Server::run() {
+    while (true) {
+        clientSocket_ = accept(
+            serverSocket_,
+            nullptr,
+            nullptr);
+
+#ifdef _WIN32
+        if (clientSocket_ == INVALID_SOCKET) {
+#else
+        if (clientSocket_ == -1) {
+#endif
+            throw std::runtime_error("Failed to accept connection");
+        }
+
+        std::cout << "Client connected.\n";
+
+        std::thread clientThread(&Server::handleClient, this);
+        clientThread.detach();
+    }
+}
+
+void Server::handleClient() {
+    std::string message = receiveMessage();
+
+    std::cout << "Received: "
+              << message << '\n';
+
+    sendMessage("Hello Client!");
 }
 
 std::string Server::receiveMessage() {
@@ -103,36 +130,12 @@ void Server::sendMessage(const std::string& message) {
         clientSocket_,
         message.c_str(),
         static_cast<int>(message.size()),
-        0
-    );
+        0);
 
     if (bytesSent == -1) {
         throw std::runtime_error("Failed to send message");
     }
 
-    std::cout << "Message sent: " << message << '\n';
-}
-
-void Server::run() {
-    while (true) {
-        clientSocket_ = accept(
-            serverSocket_,
-            nullptr,
-            nullptr);
-
-#ifdef _WIN32
-        if (clientSocket_ == INVALID_SOCKET) {
-#else
-        if (clientSocket_ == -1) {
-#endif
-            throw std::runtime_error("Failed to accept connection");
-        }
-
-        std::cout << "Client connected.\n";
-
-        std::string message = receiveMessage();
-        std::cout << "Received: " << message << '\n';
-
-        sendMessage("Hello Client!");
-    }
+    std::cout << "Message sent: "
+              << message << '\n';
 }
