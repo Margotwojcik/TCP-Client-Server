@@ -18,6 +18,8 @@ public:
     // Odbiera wiadomość od klienta.
     std::string receiveMessage();
 
+    void sendMessage(const std::string& message);
+
 private:
     std::uint16_t port_;
 

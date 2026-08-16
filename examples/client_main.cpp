@@ -8,6 +8,9 @@ int main() {
 
         client.connectToServer();
         client.sendMessage("Hello Server!");
+
+        std::string message = client.receiveMessage();
+        std::cout << "Received: " << message << '\n';
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';

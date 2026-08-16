@@ -11,6 +11,8 @@ int main() {
 
         std::string message = server.receiveMessage();
         std::cout << "Received: " << message << '\n';
+
+        server.sendMessage("Hello Client!");
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';

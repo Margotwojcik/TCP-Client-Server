@@ -78,3 +78,20 @@ void Client::sendMessage(const std::string& message) {
 
     std::cout << "Message sent: " << message << '\n';
 }
+
+std::string Client::receiveMessage() {
+    char buffer[1024]{};
+
+    int bytesReceived = recv(
+        clientSocket_,
+        buffer,
+        sizeof(buffer) - 1,
+        0
+    );
+
+    if (bytesReceived <= 0) {
+        throw std::runtime_error("Failed to receive message");
+    }
+
+    return std::string(buffer, bytesReceived);
+}

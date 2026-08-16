@@ -80,7 +80,7 @@ void Server::start() {
     std::cout << "Server listening on port "
               << port_ << '\n';
 
-    // Oczekujemy na połączenie klienta.
+    // Oczekujemy na połączenie klienta
     clientSocket_ = accept(
         serverSocket_,
         nullptr,
@@ -111,4 +111,19 @@ std::string Server::receiveMessage() {
     }
 
     return std::string(buffer, bytesReceived);
+}
+
+void Server::sendMessage(const std::string& message) {
+    int bytesSent = send(
+        clientSocket_,
+        message.c_str(),
+        static_cast<int>(message.size()),
+        0
+    );
+
+    if (bytesSent == -1) {
+        throw std::runtime_error("Failed to send message");
+    }
+
+    std::cout << "Message sent: " << message << '\n';
 }
