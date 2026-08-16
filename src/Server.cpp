@@ -80,21 +80,6 @@ void Server::start() {
     std::cout << "Server listening on port "
               << port_ << '\n';
 
-    // Oczekujemy na połączenie klienta
-    clientSocket_ = accept(
-        serverSocket_,
-        nullptr,
-        nullptr);
-
-#ifdef _WIN32
-    if (clientSocket_ == INVALID_SOCKET) {
-#else
-    if (clientSocket_ == -1) {
-#endif
-        throw std::runtime_error("Failed to accept connection");
-    }
-
-    std::cout << "Client connected.\n";
 }
 
 std::string Server::receiveMessage() {
@@ -126,4 +111,28 @@ void Server::sendMessage(const std::string& message) {
     }
 
     std::cout << "Message sent: " << message << '\n';
+}
+
+void Server::run() {
+    while (true) {
+        clientSocket_ = accept(
+            serverSocket_,
+            nullptr,
+            nullptr);
+
+#ifdef _WIN32
+        if (clientSocket_ == INVALID_SOCKET) {
+#else
+        if (clientSocket_ == -1) {
+#endif
+            throw std::runtime_error("Failed to accept connection");
+        }
+
+        std::cout << "Client connected.\n";
+
+        std::string message = receiveMessage();
+        std::cout << "Received: " << message << '\n';
+
+        sendMessage("Hello Client!");
+    }
 }

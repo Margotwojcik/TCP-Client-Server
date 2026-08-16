@@ -14,6 +14,7 @@ public:
 
     // Uruchamia serwer i oczekuje na połączenie klienta.
     void start();
+    void run();
 
     // Odbiera wiadomość od klienta.
     std::string receiveMessage();

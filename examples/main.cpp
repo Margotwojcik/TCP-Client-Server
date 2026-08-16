@@ -8,11 +8,7 @@ int main() {
         Server server(8080);
 
         server.start();
-
-        std::string message = server.receiveMessage();
-        std::cout << "Received: " << message << '\n';
-
-        server.sendMessage("Hello Client!");
+        server.run();
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
