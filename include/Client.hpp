@@ -12,10 +12,16 @@ public:
     explicit Client(const std::string& address, std::uint16_t port);
     ~Client();
 
-    // Łączy klienta z serwerem TCP.
     void connectToServer();
     void sendMessage(const std::string& message);
     std::string receiveMessage();
+    void receiveMessages();
+
+    #ifdef _WIN32
+    SOCKET getSocket() const;
+#else
+    int getSocket() const;
+#endif
 
 private:
     std::string address_;

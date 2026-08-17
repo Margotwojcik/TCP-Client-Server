@@ -31,7 +31,6 @@ Client::~Client() {
 
 void Client::connectToServer() {
 #ifdef _WIN32
-    // Inicjalizacja biblioteki Winsock
     WSADATA wsaData;
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -41,7 +40,11 @@ void Client::connectToServer() {
 
     clientSocket_ = socket(AF_INET, SOCK_STREAM, 0);
 
+#ifdef _WIN32
+    if (clientSocket_ == INVALID_SOCKET) {
+#else
     if (clientSocket_ == -1) {
+#endif
         throw std::runtime_error("Failed to create socket");
     }
 
@@ -56,7 +59,6 @@ void Client::connectToServer() {
         throw std::runtime_error("Invalid server address");
     }
 
-    // Nawiązujemy połączenie z serwerem
     if (connect(
             clientSocket_,
             reinterpret_cast<sockaddr*>(&serverAddress),
@@ -86,8 +88,7 @@ std::string Client::receiveMessage() {
         clientSocket_,
         buffer,
         sizeof(buffer) - 1,
-        0
-    );
+        0);
 
     if (bytesReceived <= 0) {
         throw std::runtime_error("Failed to receive message");
@@ -95,3 +96,33 @@ std::string Client::receiveMessage() {
 
     return std::string(buffer, bytesReceived);
 }
+
+void Client::receiveMessages() {
+    while (true) {
+        char buffer[1024]{};
+
+        int bytesReceived = recv(
+            clientSocket_,
+            buffer,
+            sizeof(buffer) - 1,
+            0);
+
+        if (bytesReceived <= 0) {
+            break;
+        }
+
+        std::cout << "\nServer: "
+                  << std::string(buffer, bytesReceived)
+                  << "\nYou: ";
+    }
+}
+
+#ifdef _WIN32
+SOCKET Client::getSocket() const {
+    return clientSocket_;
+}
+#else
+int Client::getSocket() const {
+    return clientSocket_;
+}
+#endif

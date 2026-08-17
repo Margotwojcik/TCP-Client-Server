@@ -95,23 +95,68 @@ void Server::run() {
 
         std::cout << "Client connected.\n";
 
-        std::thread clientThread(&Server::handleClient, this);
+        {
+            std::lock_guard<std::mutex> lock(clientsMutex_);
+            clients_.push_back(clientSocket_);
+        }
+
+        std::thread clientThread(
+            &Server::handleClient,
+            this,
+            clientSocket_);
+
         clientThread.detach();
     }
 }
 
-void Server::handleClient() {
+void Server::handleClient(int clientSocket) {
     while (true) {
-        std::string message = receiveMessage();
+        char buffer[1024]{};
+
+        int bytesReceived = recv(
+            clientSocket,
+            buffer,
+            sizeof(buffer) - 1,
+            0);
+
+        if (bytesReceived <= 0) {
+            break;
+        }
+
+        std::string message(buffer, bytesReceived);
 
         std::cout << "Received: "
                   << message << '\n';
 
-        if (message == "exit") {
+        if (message == "/exit") {
             break;
         }
 
-        sendMessage("Server received: " + message);
+        broadcastMessage(message, clientSocket);
+    }
+    removeClient(clientSocket);
+
+    #ifdef _WIN32
+    closesocket(clientSocket);
+#else
+    close(clientSocket);
+#endif
+}
+
+void Server::broadcastMessage(
+    const std::string& message,
+    int senderSocket) {
+
+    std::lock_guard<std::mutex> lock(clientsMutex_);
+
+    for (int client : clients_) {
+        if (client != senderSocket) {
+            send(
+                client,
+                message.c_str(),
+                static_cast<int>(message.size()),
+                0);
+        }
     }
 }
 
@@ -144,4 +189,15 @@ void Server::sendMessage(const std::string& message) {
 
     std::cout << "Message sent: "
               << message << '\n';
+}
+
+void Server::removeClient(int clientSocket) {
+    std::lock_guard<std::mutex> lock(clientsMutex_);
+
+    for (auto it = clients_.begin(); it != clients_.end(); ++it) {
+        if (*it == clientSocket) {
+            clients_.erase(it);
+            break;
+        }
+    }
 }

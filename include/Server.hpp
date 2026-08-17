@@ -2,7 +2,8 @@
 
 #include <cstdint>
 #include <string>
-#include <thread>
+#include <vector>
+#include <mutex>
 
 class Server {
 public:
@@ -16,9 +17,16 @@ public:
     void sendMessage(const std::string& message);
 
 private:
-    void handleClient();
+    void removeClient(int clientSocket);
+    void handleClient(int clientSocket);
+    void broadcastMessage(
+        const std::string& message,
+        int senderSocket);
 
     std::uint16_t port_;
     int serverSocket_;
     int clientSocket_;
+
+    std::vector<int> clients_;
+    std::mutex clientsMutex_;
 };
