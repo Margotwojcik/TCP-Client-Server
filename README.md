@@ -28,7 +28,6 @@ A multithreaded TCP client-server application written in C++ using TCP sockets a
 
 ## Project Structure
 
-```text
 TCP-Client-Server/
 ├── include/
 │   ├── Client.hpp
