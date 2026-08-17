@@ -101,12 +101,18 @@ void Server::run() {
 }
 
 void Server::handleClient() {
-    std::string message = receiveMessage();
+    while (true) {
+        std::string message = receiveMessage();
 
-    std::cout << "Received: "
-              << message << '\n';
+        std::cout << "Received: "
+                  << message << '\n';
 
-    sendMessage("Hello Client!");
+        if (message == "exit") {
+            break;
+        }
+
+        sendMessage("Server received: " + message);
+    }
 }
 
 std::string Server::receiveMessage() {
